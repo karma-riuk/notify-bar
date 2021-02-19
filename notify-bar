@@ -1,0 +1,42 @@
+#!/bin/bash
+
+
+BAR_CHAR="―" # Settable with the -b <char> flag (or --bar-character <char>)
+EMPTY_CHAR=" " # Settable with the -e <char> flag (or --empty-character <char>) 
+
+ICON="None" # Setting with the -i <path> flag (or --icon <path>)
+PERCENTAGE=1 # Settable with the -p or --percentage 
+
+# Returns the bar without any decoration, given the bar character, the empty
+# character and the total bar length.
+#   @param 1: bar character
+#   @param 2: empty character
+#   @param 3: percentage of the bar (between 0 and 100)
+#   @param 3: total bar length (length measured in characters, empty chars included)
+_get_bar_string() {
+    local bar_char="$1"
+    local empty_char="$2"
+
+    local percentage="$3"
+    local total_len="$4"
+    local bar_len=$(_get_bar_len_from_total $percentage $total_len)
+    local empty_len=$((total_len - bar_len))
+
+    printf "%0.s$bar_char" $(seq 1 $bar_len)
+    printf "%0.s$empty_char" $(seq 1 $empty_len)
+}
+
+_check_dependencies() {
+}
+
+# Returns the length of the bar (excluding the empty characters) given the
+# percentage and the total length.
+#   @param 1: percentage (between 0 and 100)
+#   @param 2: total bar length (length measured in characters, empty chars included)
+_get_bar_len_from_total() {
+    local perc="$1"
+    local len="$2"
+
+    echo "$((len * perc / 100))"
+}
+
