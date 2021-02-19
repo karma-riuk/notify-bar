@@ -7,26 +7,37 @@ EMPTY_CHAR=" " # Settable with the -e <char> flag (or --empty-character <char>)
 ICON="None" # Setting with the -i <path> flag (or --icon <path>)
 PERCENTAGE=1 # Settable with the -p or --percentage 
 
+_check_dependencies() {
+    exit 0
+}
+
 # Returns the bar without any decoration, given the bar character, the empty
 # character and the total bar length.
-#   @param 1: bar character
-#   @param 2: empty character
-#   @param 3: percentage of the bar (between 0 and 100)
-#   @param 3: total bar length (length measured in characters, empty chars included)
+#   @param 1: percentage of the bar (between 0 and 100)
+#   @param 2: total bar length (length measured in characters, empty chars included)
+#   @param 3 (optional): bar character
+#   @param 4 (optional): empty character
 _get_bar_string() {
-    local bar_char="$1"
-    local empty_char="$2"
+    local bar_char="${3:-$BAR_CHAR}"
+    local empty_char="${4:-$EMPTY_CHAR}"
 
-    local percentage="$3"
-    local total_len="$4"
+    local percentage="$1"
+    local total_len="$2"
     local bar_len=$(_get_bar_len_from_total $percentage $total_len)
     local empty_len=$((total_len - bar_len))
 
-    printf "%0.s$bar_char" $(seq 1 $bar_len)
-    printf "%0.s$empty_char" $(seq 1 $empty_len)
-}
+    if [[ $percentage -le 0 ]]; then
+        local bar=""
+        local empty="$(printf "%0.s$empty_char" $(seq 1 $total_len))"
+    elif [[ $percentage -ge 100 ]]; then
+        local bar="$(printf "%0.s$bar_char" $(seq 1 $total_len))"
+        local empty=""
+    else
+        local bar=$(printf "%0.s$bar_char" $(seq 1 $bar_len))
+        local empty=$(printf "%0.s$empty_char" $(seq 1 $empty_len))
+    fi
 
-_check_dependencies() {
+    echo "${bar}${empty}"
 }
 
 # Returns the length of the bar (excluding the empty characters) given the
