@@ -5,28 +5,37 @@ BAR_CHAR="―" # Settable with the -b <char> flag (or --bar-character <char>)
 EMPTY_CHAR=" " # Settable with the -e <char> flag (or --empty-character <char>) 
 
 ICON="None" # Setting with the -i <path> flag (or --icon <path>)
-PERCENTAGE=1 # Settable with the -p or --percentage 
 
-_check_dependencies() {
+PERCENTAGE=50 # Settable with the -p or --percentage 
+TOTAL_BAR_LENGTH=10
+
+
+### NOTE: Maybe to a demo (a bar that goes from 0 to 100 and back and forth) with a --demo flag?
+
+__check_dependencies() {
     exit 0
+}
+
+__parse_args() {
+    :
 }
 
 # Returns the bar without any decoration, given the bar character, the empty
 # character and the total bar length.
 #   @param 1: percentage of the bar (between 0 and 100)
 #   @param 2: total bar length (length measured in characters, empty chars included)
-#   @param 3 (optional): bar character
-#   @param 4 (optional): empty character
-_get_bar_string() {
-    local bar_char="${3:-$BAR_CHAR}"
-    local empty_char="${4:-$EMPTY_CHAR}"
-
+#   @param 3: bar character
+#   @param 4: empty character
+__get_bar_string() {
     local percentage="$1"
     local total_len="$2"
-    local bar_len=$(_get_bar_len_from_total $percentage $total_len)
+    local bar_char="$3"
+    local empty_char="$4"
+
+    local bar_len=$(__get_bar_len_from_total $percentage $total_len)
     local empty_len=$((total_len - bar_len))
 
-    if [[ $percentage -le 0 ]]; then
+    if [[ $percentage -lt 10 ]]; then
         local bar=""
         local empty="$(printf "%0.s$empty_char" $(seq 1 $total_len))"
     elif [[ $percentage -ge 100 ]]; then
@@ -44,10 +53,43 @@ _get_bar_string() {
 # percentage and the total length.
 #   @param 1: percentage (between 0 and 100)
 #   @param 2: total bar length (length measured in characters, empty chars included)
-_get_bar_len_from_total() {
+__get_bar_len_from_total() {
     local perc="$1"
     local len="$2"
 
     echo "$((len * perc / 100))"
 }
 
+#   @param 1: percentage of the bar (between 0 and 100)
+#   @param 2: total notification length (in characters), i.e. the number of
+#             chars that fit into the notification
+#   @param 3: bar character
+#   @param 4: empty character
+__get_full_notification() {
+    local percentage="$1"
+    local total_notif_length="$2"
+    local bar_char="$3"
+    local empty_char="$4"
+
+    local text="($percentage%)"
+    local text_width=$(echo -n "$text" | wc -m)
+
+    local total_bar_length=$((total_notif_length - text_width))
+
+    local bar="$(__get_bar_string "$percentage" "$total_bar_length" "$bar_char" "$empty_char")"
+    
+    local ret="$bar$text"
+
+    echo "$ret"
+}
+
+#   @param 1: percentage of the bar (between 0 and 100)
+#   @param 2 (optional): total bar length (length measured in characters, empty chars included)
+#   @param 3 (optional): bar character
+#   @param 4 (optional): empty character
+notify() {
+    local percentage="$1"
+    local total_length="$2"
+    local bar_char="$3"
+    local empty_char="$4"
+}
