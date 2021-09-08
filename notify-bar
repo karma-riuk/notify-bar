@@ -4,10 +4,12 @@
 BAR_CHAR="―" # Settable with the -b <char> flag (or --bar-character <char>)
 EMPTY_CHAR=" " # Settable with the -e <char> flag (or --empty-character <char>) 
 
-ICON="None" # Setting with the -i <path> flag (or --icon <path>)
+ICON="" # Setting with the -i <path> flag (or --icon <path>)
 
 PERCENTAGE=50 # Settable with the -p or --percentage 
-TOTAL_BAR_LENGTH=10
+TOTAL_BAR_LENGTH=36
+
+NOTIFICATION_ID=23944
 
 
 ### NOTE: Maybe to a demo (a bar that goes from 0 to 100 and back and forth) with a --demo flag?
@@ -42,6 +44,7 @@ __get_bar_string() {
         local bar="$(printf "%0.s$bar_char" $(seq 1 $total_len))"
         local empty=""
     else
+        notify-send "bar len: $bar_len"  "empty_len: $empty_len"
         local bar=$(printf "%0.s$bar_char" $(seq 1 $bar_len))
         local empty=$(printf "%0.s$empty_char" $(seq 1 $empty_len))
     fi
@@ -57,9 +60,11 @@ __get_bar_len_from_total() {
     local perc="$1"
     local len="$2"
 
-    echo "$((len * perc / 100))"
+    ret="$((len * perc / 100))"
+    echo "$ret"
 }
 
+# Returns the full notification to be displayed
 #   @param 1: percentage of the bar (between 0 and 100)
 #   @param 2: total notification length (in characters), i.e. the number of
 #             chars that fit into the notification
@@ -84,12 +89,24 @@ __get_full_notification() {
 }
 
 #   @param 1: percentage of the bar (between 0 and 100)
-#   @param 2 (optional): total bar length (length measured in characters, empty chars included)
-#   @param 3 (optional): bar character
-#   @param 4 (optional): empty character
+#   @param 2: app name
+#   @param 3: icon name
+#   @param 4 (optional): total bar length (length measured in characters, empty chars included)
+#   @param 5 (optional): bar character
+#   @param 6 (optional): empty character
+#   @param 7 (optional): notification id
 notify() {
     local percentage="$1"
-    local total_length="$2"
-    local bar_char="$3"
-    local empty_char="$4"
+    local app_name="$2"
+    local icon_name="$3"
+    local total_length="${4:-$TOTAL_BAR_LENGTH}"
+    local bar_char="${5:-$BAR_CHAR}"
+    local empty_char="${6:-$EMPTY_CHAR}"
+    local notification_id="${7:-$NOTIFICATION_ID}"
+
+    notification="$(__get_full_notification $percentage $total_length "$bar_char" "$empty_char")"
+    # notify-send "dunstify -i \"$icon_name\" -a $app_name -r \"$notification_id\" \"$notification\""
+    dunstify -i "$icon_name" -r "$notification_id" "" "$notification"
 }
+
+notify 53 "dunst-volume" "audio-volume-low"
